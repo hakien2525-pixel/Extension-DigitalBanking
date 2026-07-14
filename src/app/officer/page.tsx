@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UserCircle, Search, Filter, FileText, CheckCircle, AlertTriangle, FileCheck } from "lucide-react";
+import { toast } from "sonner";
 
 // Mock data
 const applications = [
@@ -29,195 +30,204 @@ const applications = [
 export default function OfficerDashboard() {
   const router = useRouter();
   const [selectedApp, setSelectedApp] = useState(applications[0]);
-  const [actionStatus, setActionStatus] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredApps = applications.filter(app => 
+    app.company.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    app.id.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleApprove = () => {
-    setActionStatus("Hồ sơ đã được phê duyệt sơ bộ và chuyển lên Quản lý cấp cao.");
-    setTimeout(() => setActionStatus(null), 3000);
+    toast.success("Đã phê duyệt sơ bộ!", {
+      description: `Hồ sơ ${selectedApp.id} đã được chuyển lên Quản lý cấp cao.`
+    });
   };
 
   const handleReject = () => {
-    setActionStatus("Đã gửi yêu cầu bổ sung hồ sơ cho doanh nghiệp.");
-    setTimeout(() => setActionStatus(null), 3000);
+    toast.error("Yêu cầu bổ sung", {
+      description: `Đã thông báo cho doanh nghiệp ${selectedApp.company} bổ sung tài liệu.`
+    });
+  };
+
+  const handleLogout = () => {
+    toast.success("Đăng xuất thành công");
+    router.push('/');
   };
 
   return (
-    <div className="min-h-screen flex bg-slate-50">
+    <div className="min-h-screen flex bg-slate-50 font-sans text-slate-900">
       
       {/* Sidebar: Application List */}
-      <div className="w-1/3 bg-white border-r border-slate-200 flex flex-col h-screen">
+      <div className="w-1/3 min-w-[350px] max-w-[400px] bg-white border-r border-slate-200 flex flex-col h-screen z-10 shadow-sm relative">
         <div className="p-6 border-b border-slate-200 bg-[#0A192F] text-white">
-          <div className="flex items-center gap-3 mb-6">
-            <UserCircle className="w-8 h-8 text-blue-400" />
+          <div className="flex items-center gap-4 mb-6">
+            <div className="bg-blue-900/50 p-2 rounded-xl">
+              <UserCircle className="w-8 h-8 text-blue-400" />
+            </div>
             <div>
-              <h1 className="font-bold">TechBank Officer</h1>
-              <p className="text-xs text-slate-400">Phân hệ Thẩm định viên</p>
+              <h1 className="font-bold text-lg tracking-tight">TechBank Officer</h1>
+              <p className="text-xs text-blue-200 font-medium">Phân hệ Thẩm định viên</p>
             </div>
           </div>
           <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+            <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
             <input 
               type="text" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Tìm mã hồ sơ, tên công ty..." 
-              className="w-full bg-slate-800 text-sm text-white placeholder-slate-400 rounded-lg pl-9 pr-4 py-2.5 focus:outline-none focus:ring-1 focus:ring-blue-500 border border-slate-700"
+              className="w-full bg-slate-800/50 text-sm text-white placeholder-slate-400 rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-slate-700 transition-all"
             />
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-4 border-b border-slate-100 flex justify-between items-center text-sm">
-            <span className="font-medium text-slate-700">Hồ sơ chờ duyệt (2)</span>
-            <button className="text-blue-600 flex items-center gap-1"><Filter className="w-4 h-4"/> Lọc</button>
+        <div className="flex-1 overflow-y-auto bg-slate-50/50">
+          <div className="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Hồ sơ chờ duyệt ({filteredApps.length})</span>
+            <button 
+              onClick={() => toast.info("Tính năng lọc nâng cao đang được phát triển.")}
+              className="text-blue-600 flex items-center gap-1.5 text-sm font-semibold hover:bg-blue-50 px-2 py-1 rounded-md transition-colors"
+            >
+              <Filter className="w-4 h-4"/> Lọc
+            </button>
           </div>
           
           <div className="divide-y divide-slate-100">
-            {applications.map(app => (
-              <div 
-                key={app.id} 
-                onClick={() => setSelectedApp(app)}
-                className={`p-5 cursor-pointer transition-colors ${selectedApp.id === app.id ? 'bg-blue-50 border-l-4 border-blue-600' : 'hover:bg-slate-50 border-l-4 border-transparent'}`}
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-xs font-semibold text-blue-600 bg-blue-100 px-2 py-0.5 rounded">{app.id}</span>
-                  <span className="text-xs text-slate-500">{app.date}</span>
+            {filteredApps.length === 0 ? (
+              <div className="p-8 text-center text-slate-500 text-sm">Không tìm thấy hồ sơ phù hợp.</div>
+            ) : (
+              filteredApps.map(app => (
+                <div 
+                  key={app.id} 
+                  onClick={() => setSelectedApp(app)}
+                  className={`p-5 cursor-pointer transition-all ${
+                    selectedApp.id === app.id 
+                      ? 'bg-blue-50/80 border-l-4 border-blue-600 shadow-sm relative z-0' 
+                      : 'hover:bg-white border-l-4 border-transparent bg-slate-50/30'
+                  }`}
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <span className={`text-xs font-bold px-2 py-1 rounded-md ${
+                      selectedApp.id === app.id ? 'bg-blue-100 text-blue-700' : 'bg-slate-200 text-slate-700'
+                    }`}>
+                      {app.id}
+                    </span>
+                    <span className="text-xs text-slate-400 font-medium">{app.date}</span>
+                  </div>
+                  <h3 className="font-bold text-slate-900 mb-1.5 leading-snug">{app.company}</h3>
+                  <p className="text-sm text-blue-700 font-semibold">{app.amount}</p>
                 </div>
-                <h3 className="font-medium text-slate-900 mb-1">{app.company}</h3>
-                <p className="text-sm text-slate-600 font-medium">{app.amount}</p>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>
 
       {/* Main Content: Application Details */}
-      <div className="w-2/3 flex flex-col h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden bg-slate-50">
         {/* Header */}
-        <header className="bg-white border-b border-slate-200 px-8 py-4 flex justify-between items-center shadow-sm z-10">
-          <h2 className="text-xl font-bold text-slate-800">Chi tiết Hồ sơ</h2>
-          <button onClick={() => router.push('/')} className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
+        <header className="bg-white border-b border-slate-200 px-8 py-5 flex justify-between items-center sticky top-0 z-10 shadow-sm">
+          <h2 className="text-lg font-bold text-slate-800">Chi tiết Hồ sơ Thẩm định</h2>
+          <button 
+            onClick={handleLogout} 
+            className="text-sm font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-100 px-4 py-2 rounded-lg transition-colors"
+          >
             Đăng xuất
           </button>
         </header>
 
         {/* Content Scrollable */}
-        <div className="flex-1 overflow-y-auto p-8 relative">
+        <div className="flex-1 overflow-y-auto p-8 lg:p-12 relative">
           
-          {actionStatus && (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-green-100 border border-green-200 text-green-800 px-6 py-3 rounded-lg shadow-md flex items-center gap-2 z-50 transition-all duration-300">
-              <CheckCircle className="w-5 h-5" />
-              <span className="font-medium text-sm">{actionStatus}</span>
-            </div>
-          )}
-
-          <div className="max-w-3xl mx-auto space-y-6 pb-20">
+          <div className="max-w-4xl mx-auto space-y-8 pb-20">
             {/* Title Section */}
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <span className="text-sm font-bold text-slate-500">{selectedApp.id}</span>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+            <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-sm font-bold text-slate-400 uppercase tracking-wider">{selectedApp.id}</span>
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
                   Chờ thẩm định sơ bộ
                 </span>
               </div>
-              <h1 className="text-3xl font-bold text-slate-900">{selectedApp.company}</h1>
-              <div className="mt-4 flex gap-10">
+              <h1 className="text-3xl font-extrabold text-slate-900 mb-6">{selectedApp.company}</h1>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-6 border-t border-slate-100">
                 <div>
-                  <p className="text-sm text-slate-500 mb-1">Số tiền đề nghị vay</p>
-                  <p className="text-xl font-semibold text-blue-700">{selectedApp.amount}</p>
+                  <p className="text-xs font-bold text-slate-400 uppercase mb-1.5">Số tiền đề nghị vay</p>
+                  <p className="text-xl font-bold text-blue-700">{selectedApp.amount}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500 mb-1">Ngày nộp hồ sơ</p>
-                  <p className="text-lg font-medium text-slate-800">{selectedApp.date}</p>
+                  <p className="text-xs font-bold text-slate-400 uppercase mb-1.5">Ngày nộp hồ sơ</p>
+                  <p className="text-lg font-semibold text-slate-800">{selectedApp.date}</p>
                 </div>
               </div>
             </div>
 
             {/* AI Analysis Report */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-              <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 flex items-center gap-2">
-                <FileCheck className="w-5 h-5 text-blue-600" />
-                <h3 className="font-bold text-slate-800">Báo cáo Phân tích từ AI</h3>
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="bg-slate-50/80 border-b border-slate-200 px-8 py-5 flex items-center gap-3">
+                <FileCheck className="w-6 h-6 text-blue-600" />
+                <h3 className="font-bold text-slate-800 text-lg">Báo cáo Phân tích từ AI</h3>
               </div>
               
-              <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6 border-b border-slate-100">
-                <div className="col-span-1 md:border-r border-slate-100 pr-6">
-                  <p className="text-sm text-slate-500 mb-2">Điểm Tín dụng (AI chấm)</p>
-                  <div className="flex items-end gap-2">
-                    <span className={`text-4xl font-bold ${selectedApp.riskScore >= 70 ? 'text-green-600' : 'text-red-600'}`}>
+              <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-8 border-b border-slate-100">
+                <div className="col-span-1 md:border-r border-slate-100 pr-8 flex flex-col justify-center">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Điểm Tín dụng (AI chấm)</p>
+                  <div className="flex items-baseline gap-2 mb-4">
+                    <span className={`text-6xl font-black ${selectedApp.riskScore >= 70 ? 'text-emerald-500' : 'text-rose-500'}`}>
                       {selectedApp.riskScore}
                     </span>
-                    <span className="text-slate-400 mb-1 font-medium">/ 100</span>
+                    <span className="text-slate-400 font-bold text-xl">/ 100</span>
                   </div>
-                  <div className="mt-4">
-                    <div className="w-full bg-slate-200 rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full ${selectedApp.riskScore >= 70 ? 'bg-green-500' : 'bg-red-500'}`} 
-                        style={{ width: `${selectedApp.riskScore}%` }}
-                      ></div>
-                    </div>
+                  <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-1000 ${selectedApp.riskScore >= 70 ? 'bg-emerald-500' : 'bg-rose-500'}`} 
+                      style={{ width: `${selectedApp.riskScore}%` }}
+                    ></div>
                   </div>
                 </div>
                 
-                <div className="col-span-1 md:col-span-2 space-y-4">
+                <div className="col-span-1 md:col-span-2 space-y-5">
                   <div>
-                    <p className="text-sm text-slate-500 mb-2">Đánh giá chung</p>
-                    <p className="text-slate-800 font-medium leading-relaxed">{selectedApp.aiSummary}</p>
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Đánh giá chung</p>
+                    <p className="text-slate-800 font-medium leading-relaxed text-lg bg-slate-50 p-4 rounded-xl border border-slate-100">
+                      {selectedApp.aiSummary}
+                    </p>
                   </div>
                   {selectedApp.riskScore < 50 && (
-                    <div className="bg-red-50 border border-red-100 p-3 rounded-lg flex items-start gap-3">
-                      <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-                      <p className="text-sm text-red-800 leading-relaxed">Cảnh báo rủi ro cao. Cần xem xét kỹ báo cáo tài chính quý gần nhất và yêu cầu giải trình về sự sụt giảm doanh thu.</p>
+                    <div className="bg-rose-50 border border-rose-200 p-4 rounded-xl flex items-start gap-4">
+                      <AlertTriangle className="w-6 h-6 text-rose-600 shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="font-bold text-rose-800 mb-1">Cảnh báo rủi ro cao</h4>
+                        <p className="text-sm text-rose-700 leading-relaxed font-medium">Cần xem xét kỹ báo cáo tài chính quý gần nhất và yêu cầu giải trình về sự sụt giảm doanh thu trước khi chuyển hồ sơ.</p>
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Document List */}
-              <div className="p-6">
-                <p className="text-sm font-semibold text-slate-700 mb-4">Tài liệu đã được AI bóc tách (OCR)</p>
+              <div className="p-8">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">Tài liệu đã được AI bóc tách (OCR)</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg bg-slate-50">
-                    <FileText className="w-8 h-8 text-blue-500" />
-                    <div>
-                      <p className="text-sm font-medium text-slate-800">Giấy ĐKKD</p>
-                      <p className="text-xs text-green-600 font-medium">Đã xác thực chữ ký số</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg bg-slate-50">
-                    <FileText className="w-8 h-8 text-blue-500" />
-                    <div>
-                      <p className="text-sm font-medium text-slate-800">BCTC Năm 2022</p>
-                      <p className="text-xs text-green-600 font-medium">Đã đối chiếu số liệu</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg bg-slate-50">
-                    <FileText className="w-8 h-8 text-blue-500" />
-                    <div>
-                      <p className="text-sm font-medium text-slate-800">CCCD Người đại diện</p>
-                      <p className="text-xs text-green-600 font-medium">Khớp thông tin ĐKKD</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg bg-slate-50">
-                    <FileText className="w-8 h-8 text-slate-400" />
-                    <div>
-                      <p className="text-sm font-medium text-slate-800">Sao kê ngân hàng</p>
-                      <p className="text-xs text-slate-500 font-medium">Đang chờ đối chiếu dòng tiền</p>
-                    </div>
-                  </div>
+                  <DocumentStatus icon="Check" title="Giấy ĐKKD" status="Đã xác thực chữ ký số" active />
+                  <DocumentStatus icon="Check" title="BCTC Năm 2022" status="Đã đối chiếu số liệu" active />
+                  <DocumentStatus icon="Check" title="CCCD Người đại diện" status="Khớp thông tin ĐKKD" active />
+                  <DocumentStatus icon="Wait" title="Sao kê ngân hàng" status="Đang chờ đối chiếu dòng tiền" />
                 </div>
               </div>
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-4 pt-6">
+            <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <button 
                 onClick={handleReject}
-                className="flex-1 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900 py-3 rounded-lg font-medium transition-colors"
+                className="flex-1 bg-white border-2 border-slate-200 text-slate-700 hover:border-rose-300 hover:text-rose-700 hover:bg-rose-50 py-4 rounded-xl font-bold transition-all focus:ring-4 focus:ring-rose-100"
               >
                 Yêu cầu bổ sung hồ sơ
               </button>
               <button 
                 onClick={handleApprove}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors shadow-sm"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20 focus:ring-4 focus:ring-blue-600/20 active:scale-[0.98]"
               >
                 Phê duyệt sơ bộ & Chuyển Quản lý
               </button>
@@ -225,6 +235,20 @@ export default function OfficerDashboard() {
 
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function DocumentStatus({ active, title, status, icon }: { active?: boolean, title: string, status: string, icon: 'Check' | 'Wait' }) {
+  return (
+    <div className={`flex items-center gap-4 p-4 border rounded-xl transition-colors ${active ? 'border-emerald-100 bg-emerald-50/30' : 'border-slate-200 bg-slate-50'}`}>
+      <div className={`p-2.5 rounded-lg ${active ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-500'}`}>
+        <FileText className="w-6 h-6" />
+      </div>
+      <div>
+        <p className={`font-bold ${active ? 'text-slate-900' : 'text-slate-700'}`}>{title}</p>
+        <p className={`text-xs font-semibold mt-0.5 ${active ? 'text-emerald-600' : 'text-slate-500'}`}>{status}</p>
       </div>
     </div>
   );
