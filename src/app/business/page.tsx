@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { UploadCloud, CheckCircle2, AlertCircle, Loader2, FileText, Building2, CheckCircle, Camera, ScanFace, FileScan } from "lucide-react";
+import { UploadCloud, CheckCircle2, AlertCircle, Loader2, FileText, Building2, CheckCircle, Camera, ScanFace, FileScan, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Webcam from "react-webcam";
@@ -59,6 +59,8 @@ export default function BusinessDashboard() {
     setScanStep('idle');
     setCapturedImage(null);
     setOcrProgress(0);
+    setFiles({});
+    setLoanAmount("");
   };
 
   const handleLogout = () => {
@@ -67,65 +69,69 @@ export default function BusinessDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-200">
       {/* Header */}
-      <header className="bg-[#0A192F] text-white py-4 px-8 flex justify-between items-center shadow-md sticky top-0 z-20">
+      <header className="bg-[#0A192F] text-white py-4 px-8 flex justify-between items-center shadow-lg sticky top-0 z-20">
         <div className="flex items-center gap-3">
-          <Building2 className="w-6 h-6 text-blue-400" />
-          <h1 className="text-xl font-bold tracking-tight">TechBank <span className="font-light text-slate-300">Enterprise</span></h1>
+          <div className="p-2 bg-blue-900/50 rounded-xl">
+            <Building2 className="w-7 h-7 text-blue-400" />
+          </div>
+          <h1 className="text-xl font-extrabold tracking-tight">TechBank <span className="font-light text-slate-300">Enterprise</span></h1>
         </div>
         <div className="flex items-center gap-6 text-sm">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-xl border border-white/10">
             <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-bold shadow-inner">
               C
             </div>
-            <span className="font-medium hidden sm:inline">Công ty CP ABC</span>
+            <span className="font-bold hidden sm:inline tracking-wide">Công ty CP ABC</span>
           </div>
-          <button onClick={handleLogout} className="text-slate-300 hover:text-white transition-colors bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg font-medium">
+          <button onClick={handleLogout} className="text-slate-300 hover:text-white transition-colors bg-white/10 hover:bg-rose-500/80 px-5 py-2.5 rounded-xl font-bold">
             Đăng xuất
           </button>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+      <main className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         
         {scanStep === 'idle' && (
-          <>
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-slate-900">Khởi tạo Hồ sơ Vay vốn</h2>
-              <p className="text-slate-500 mt-2 text-sm leading-relaxed">
-                Cung cấp thông tin và tài liệu. Hệ thống eKYC của TechBank sẽ yêu cầu xác thực khuôn mặt và tự động bóc tách dữ liệu (OCR).
-              </p>
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="mb-10 flex justify-between items-end">
+              <div>
+                <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Khởi tạo Hồ sơ Vay vốn</h2>
+                <p className="text-slate-500 mt-2 text-base font-medium max-w-xl">
+                  Cung cấp thông tin và tài liệu. Hệ thống eKYC của TechBank sẽ yêu cầu xác thực khuôn mặt và tự động bóc tách dữ liệu (OCR).
+                </p>
+              </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-              <form onSubmit={handleStartAnalysis} className="p-8 sm:p-10">
-                <div className="space-y-10">
+            <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden">
+              <form onSubmit={handleStartAnalysis} className="p-8 sm:p-12">
+                <div className="space-y-12">
                   <section>
-                    <div className="flex items-center gap-3 mb-6 pb-3 border-b border-slate-100">
-                      <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-sm">1</div>
-                      <h3 className="text-xl font-bold text-slate-900">Thông tin khoản vay</h3>
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 font-black text-lg shadow-sm">1</div>
+                      <h3 className="text-2xl font-bold text-slate-900 tracking-tight">Thông tin khoản vay</h3>
                     </div>
-                    <div className="pl-11">
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">Số tiền cần giải ngân (VNĐ)</label>
+                    <div className="pl-14">
+                      <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wider">Số tiền cần giải ngân (VNĐ)</label>
                       <input 
                         type="text" 
                         required
                         value={loanAmount}
                         onChange={(e) => setLoanAmount(e.target.value)}
                         placeholder="VD: 5,000,000,000"
-                        className="w-full max-w-md p-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-blue-600/10 focus:border-blue-600 outline-none transition-all text-slate-900 font-medium placeholder-slate-400"
+                        className="w-full max-w-md p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all font-bold text-slate-900 text-lg placeholder-slate-400"
                       />
                     </div>
                   </section>
 
                   <section>
-                    <div className="flex items-center gap-3 mb-6 pb-3 border-b border-slate-100">
-                      <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-sm">2</div>
-                      <h3 className="text-xl font-bold text-slate-900">Tài liệu đính kèm</h3>
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 font-black text-lg shadow-sm">2</div>
+                      <h3 className="text-2xl font-bold text-slate-900 tracking-tight">Tài liệu đính kèm</h3>
                     </div>
-                    <div className="pl-11 grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div className="pl-14 grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <UploadSection id="phaply" title="Hồ sơ pháp lý" desc="ĐKKD, CCCD người đại diện" selectedFile={files['phaply']} onFileSelect={(n) => setFiles(p => ({...p, phaply: n}))} />
                       <UploadSection id="taichinh" title="Hồ sơ tài chính" desc="BCTC, Khai báo thuế, Sao kê" selectedFile={files['taichinh']} onFileSelect={(n) => setFiles(p => ({...p, taichinh: n}))} />
                       <UploadSection id="mucdich" title="Mục đích sử dụng vốn" desc="Hợp đồng, Hóa đơn" selectedFile={files['mucdich']} onFileSelect={(n) => setFiles(p => ({...p, mucdich: n}))} />
@@ -134,57 +140,59 @@ export default function BusinessDashboard() {
                   </section>
                 </div>
 
-                <div className="mt-12 pt-6 border-t border-slate-100 flex justify-end">
+                <div className="mt-14 pt-8 border-t border-slate-100 flex justify-end">
                   <button
                     type="submit"
-                    className="bg-[#0A192F] hover:bg-blue-900 text-white py-3.5 px-8 rounded-xl font-semibold transition-all flex items-center gap-2 shadow-lg shadow-[#0A192F]/20 focus:ring-4 focus:ring-[#0A192F]/20 active:scale-[0.98]"
+                    className="bg-[#0A192F] hover:bg-blue-900 text-white py-4 px-10 rounded-2xl font-bold transition-all flex items-center gap-3 shadow-xl shadow-[#0A192F]/20 hover:-translate-y-0.5 active:translate-y-0 text-lg"
                   >
-                    <ScanFace className="w-5 h-5" />
+                    <ScanFace className="w-6 h-6" />
                     Bắt đầu Định danh & Nộp hồ sơ
+                    <ChevronRight className="w-5 h-5 ml-2 opacity-70" />
                   </button>
                 </div>
               </form>
             </div>
-          </>
+          </div>
         )}
 
         {/* Step 2: Face Scan Modal */}
         {scanStep === 'face-scan' && (
-          <div className="bg-slate-900 rounded-2xl shadow-2xl overflow-hidden relative border border-slate-800 text-white">
-            <div className="p-8 text-center border-b border-slate-800">
-              <ScanFace className="w-12 h-12 text-blue-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold">Xác thực sinh trắc học (eKYC)</h2>
-              <p className="text-slate-400 mt-2">Vui lòng đưa khuôn mặt vào giữa khung hình để xác thực người đại diện pháp luật.</p>
+          <div className="bg-slate-900 rounded-3xl shadow-2xl overflow-hidden relative border border-slate-800 text-white animate-in zoom-in-95 duration-300">
+            <div className="p-10 text-center border-b border-slate-800 bg-slate-800/50">
+              <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-500/30">
+                <ScanFace className="w-8 h-8 text-blue-400" />
+              </div>
+              <h2 className="text-3xl font-extrabold tracking-tight">Xác thực sinh trắc học (eKYC)</h2>
+              <p className="text-slate-400 mt-3 font-medium text-lg">Vui lòng đưa khuôn mặt vào giữa khung hình để xác thực người đại diện pháp luật.</p>
             </div>
-            <div className="relative bg-black flex justify-center items-center min-h-[400px]">
+            <div className="relative bg-black flex justify-center items-center min-h-[500px]">
               {capturedImage ? (
-                <img src={capturedImage} alt="Captured" className="h-[400px] object-cover" />
+                <img src={capturedImage} alt="Captured" className="w-full h-[500px] object-cover opacity-80" />
               ) : (
-                <div className="relative w-full max-w-[500px]">
+                <div className="relative w-full h-[500px]">
                   <Webcam
                     audio={false}
                     ref={webcamRef}
                     screenshotFormat="image/jpeg"
                     videoConstraints={{ facingMode: "user" }}
-                    className="w-full rounded-lg"
+                    className="w-full h-full object-cover"
                   />
-                  {/* Face outline overlay */}
-                  <div className="absolute inset-0 border-[6px] border-blue-500/50 border-dashed rounded-[100px] m-10 animate-pulse pointer-events-none"></div>
+                  <div className="absolute inset-0 border-[6px] border-blue-500/50 border-dashed rounded-[150px] m-16 animate-pulse pointer-events-none"></div>
                 </div>
               )}
             </div>
-            <div className="p-6 bg-slate-900 flex justify-center">
+            <div className="p-8 bg-slate-900 flex justify-center items-center">
               {!capturedImage ? (
                 <button 
                   onClick={captureFace}
-                  className="bg-blue-600 hover:bg-blue-500 text-white py-3 px-8 rounded-full font-bold flex items-center gap-2 transition-colors shadow-lg shadow-blue-500/20"
+                  className="bg-blue-600 hover:bg-blue-500 text-white py-4 px-12 rounded-full font-bold flex items-center gap-3 transition-all shadow-xl shadow-blue-500/30 text-lg hover:scale-105 active:scale-95"
                 >
-                  <Camera className="w-5 h-5" />
+                  <Camera className="w-6 h-6" />
                   Chụp ảnh xác thực
                 </button>
               ) : (
-                <div className="flex items-center gap-2 text-emerald-400 font-medium">
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                <div className="flex items-center gap-3 text-emerald-400 font-bold bg-emerald-500/10 px-8 py-4 rounded-2xl text-lg border border-emerald-500/20">
+                  <Loader2 className="w-6 h-6 animate-spin" />
                   Đang phân tích khuôn mặt...
                 </div>
               )}
@@ -194,33 +202,32 @@ export default function BusinessDashboard() {
 
         {/* Step 3: OCR Scanning Animation */}
         {scanStep === 'ocr-scan' && (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="p-16 text-center space-y-8">
-              <div className="relative w-32 h-40 mx-auto bg-blue-50 rounded-lg border-2 border-blue-200 overflow-hidden shadow-inner">
-                <FileScan className="w-12 h-12 text-blue-300 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-                {/* Laser scan line */}
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in duration-500">
+            <div className="p-20 text-center space-y-10">
+              <div className="relative w-40 h-48 mx-auto bg-blue-50 rounded-2xl border-4 border-blue-100 overflow-hidden shadow-inner">
+                <FileScan className="w-16 h-16 text-blue-300 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                 <div 
-                  className="absolute left-0 right-0 h-1 bg-blue-500 shadow-[0_0_15px_3px_rgba(59,130,246,0.5)] transition-all duration-300"
+                  className="absolute left-0 right-0 h-1.5 bg-blue-600 shadow-[0_0_20px_5px_rgba(37,99,235,0.6)] transition-all duration-300"
                   style={{ top: `${ocrProgress}%` }}
                 ></div>
               </div>
               
               <div>
-                <h3 className="text-xl font-bold text-slate-900">AI đang quét và bóc tách dữ liệu (OCR)...</h3>
-                <p className="text-slate-500 mt-2 text-sm">Trích xuất thông tin từ Giấy phép ĐKKD, Báo cáo tài chính và CCCD.</p>
+                <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight">AI đang quét và bóc tách dữ liệu (OCR)</h3>
+                <p className="text-slate-500 mt-2 text-base font-medium">Trích xuất thông tin từ Giấy phép ĐKKD, Báo cáo tài chính và CCCD.</p>
               </div>
 
-              <div className="w-full max-w-md mx-auto bg-slate-100 rounded-full h-2.5 mb-4">
-                <div className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style={{ width: `${ocrProgress}%` }}></div>
+              <div className="w-full max-w-lg mx-auto bg-slate-100 rounded-full h-3 mb-6 overflow-hidden">
+                <div className="bg-blue-600 h-full rounded-full transition-all duration-300" style={{ width: `${ocrProgress}%` }}></div>
               </div>
               
-              <div className="max-w-md mx-auto space-y-3 text-sm text-slate-700 text-left bg-slate-50 p-6 rounded-xl border border-slate-200 shadow-inner">
-                <div className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-500" /> <span>Đang đọc Giấy phép kinh doanh... <span className="font-semibold text-emerald-600">Hoàn tất</span></span></div>
+              <div className="max-w-lg mx-auto space-y-4 text-base text-slate-700 text-left bg-slate-50 p-8 rounded-2xl border border-slate-100 shadow-sm font-medium">
+                <div className="flex items-center gap-4"><CheckCircle2 className="w-6 h-6 text-emerald-500" /> <span>Đang đọc Giấy phép kinh doanh... <span className="font-bold text-emerald-600">Hoàn tất</span></span></div>
                 {ocrProgress > 50 && (
-                  <div className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-500" /> <span>Đang trích xuất Báo cáo tài chính... <span className="font-semibold text-emerald-600">Hoàn tất</span></span></div>
+                  <div className="flex items-center gap-4"><CheckCircle2 className="w-6 h-6 text-emerald-500" /> <span>Đang trích xuất Báo cáo tài chính... <span className="font-bold text-emerald-600">Hoàn tất</span></span></div>
                 )}
                 {ocrProgress > 80 && (
-                  <div className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-emerald-500" /> <span>Đối chiếu khuôn mặt với CCCD... <span className="font-semibold text-emerald-600">Hoàn tất</span></span></div>
+                  <div className="flex items-center gap-4"><CheckCircle2 className="w-6 h-6 text-emerald-500" /> <span>Đối chiếu khuôn mặt với CCCD... <span className="font-bold text-emerald-600">Hoàn tất</span></span></div>
                 )}
               </div>
             </div>
@@ -229,51 +236,51 @@ export default function BusinessDashboard() {
 
         {/* Step 4: Final Results */}
         {scanStep === 'result' && (
-          <div className="bg-white rounded-2xl shadow-sm border border-emerald-200 overflow-hidden">
-            <div className="bg-emerald-50 border-b border-emerald-100 p-8 text-center">
-              <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-200 shadow-sm">
-                <CheckCircle className="w-10 h-10 text-emerald-600" />
+          <div className="bg-white rounded-3xl shadow-2xl border border-emerald-200 overflow-hidden animate-in zoom-in duration-500">
+            <div className="bg-emerald-50 border-b border-emerald-100 p-12 text-center">
+              <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white shadow-md">
+                <CheckCircle className="w-12 h-12 text-emerald-600" />
               </div>
-              <h3 className="text-2xl font-bold text-emerald-900">Nộp hồ sơ thành công</h3>
-              <p className="text-emerald-700 mt-2 font-medium">Hồ sơ đã được mã hóa và chuyển tới Thẩm định viên.</p>
+              <h3 className="text-3xl font-extrabold text-emerald-900 tracking-tight">Nộp hồ sơ thành công</h3>
+              <p className="text-emerald-700 mt-3 font-bold text-lg">Hồ sơ đã được mã hóa và chuyển tới Thẩm định viên.</p>
             </div>
             
-            <div className="p-8">
-              <h4 className="font-bold text-slate-800 mb-4 border-b pb-2">Kết quả phân tích tự động (AI)</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-slate-50 p-5 rounded-xl border border-slate-200">
-                  <div className="flex items-center gap-2 text-emerald-600 font-bold mb-2">
-                    <ScanFace className="w-5 h-5" />
+            <div className="p-10">
+              <h4 className="font-extrabold text-slate-800 text-xl mb-6 border-b border-slate-100 pb-4">Kết quả phân tích tự động (AI)</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                  <div className="flex items-center gap-3 text-emerald-600 font-extrabold mb-4 text-lg">
+                    <ScanFace className="w-6 h-6" />
                     Xác thực khuôn mặt
                   </div>
-                  <p className="text-sm text-slate-700">Khuôn mặt chụp thực tế khớp <strong className="text-emerald-600 text-lg">98.5%</strong> với ảnh trên Căn cước công dân của Người đại diện pháp luật.</p>
+                  <p className="text-base text-slate-600 font-medium leading-relaxed">Khuôn mặt chụp thực tế khớp <strong className="text-emerald-600 text-xl">98.5%</strong> với ảnh trên Căn cước công dân của Người đại diện pháp luật.</p>
                 </div>
                 
-                <div className="bg-slate-50 p-5 rounded-xl border border-slate-200">
-                  <div className="flex items-center gap-2 text-blue-600 font-bold mb-2">
-                    <FileScan className="w-5 h-5" />
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                  <div className="flex items-center gap-3 text-blue-600 font-extrabold mb-4 text-lg">
+                    <FileScan className="w-6 h-6" />
                     Trích xuất hồ sơ (OCR)
                   </div>
-                  <ul className="text-sm text-slate-700 space-y-1">
-                    <li>Mã số thuế: <strong>0102030405</strong></li>
-                    <li>Loại hình: <strong>Công ty Cổ phần</strong></li>
-                    <li>Năng lực trả nợ: <strong className="text-emerald-600">Khả thi</strong> (Dựa trên BCTC)</li>
+                  <ul className="text-base text-slate-600 space-y-3 font-medium">
+                    <li className="flex justify-between border-b border-slate-100 pb-2"><span>Mã số thuế:</span> <strong className="text-slate-900">0102030405</strong></li>
+                    <li className="flex justify-between border-b border-slate-100 pb-2"><span>Loại hình:</span> <strong className="text-slate-900">Công ty Cổ phần</strong></li>
+                    <li className="flex justify-between pb-2"><span>Năng lực trả nợ:</span> <strong className="text-emerald-600">Khả thi</strong></li>
                   </ul>
                 </div>
               </div>
 
-              <div className="mt-8 pt-6 border-t flex justify-end gap-4">
+              <div className="mt-10 pt-8 border-t border-slate-100 flex justify-end gap-4">
                 <button 
                   onClick={handleReupload}
-                  className="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 py-2.5 px-6 rounded-xl font-semibold transition-all"
+                  className="bg-white border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 py-3.5 px-8 rounded-xl font-bold transition-all text-lg"
                 >
                   Nộp hồ sơ mới
                 </button>
                 <button 
                   onClick={() => router.push('/')}
-                  className="bg-[#0A192F] text-white hover:bg-blue-900 py-2.5 px-8 rounded-xl font-semibold transition-all"
+                  className="bg-[#0A192F] text-white hover:bg-blue-900 py-3.5 px-10 rounded-xl font-bold transition-all shadow-lg shadow-[#0A192F]/20 text-lg hover:-translate-y-0.5"
                 >
-                  Quay về Trang chủ
+                  Về Trang chủ
                 </button>
               </div>
             </div>
@@ -302,10 +309,10 @@ function UploadSection({
   return (
     <div 
       onClick={() => fileInputRef.current?.click()}
-      className={`relative border-2 border-dashed rounded-xl p-6 transition-all cursor-pointer text-center group ${
+      className={`relative border-2 border-dashed rounded-2xl p-8 transition-all cursor-pointer text-center group ${
         selectedFile 
-          ? 'bg-blue-50 border-blue-300 hover:border-blue-400' 
-          : 'bg-slate-50 border-slate-200 hover:border-slate-300 hover:bg-slate-100'
+          ? 'bg-blue-50/50 border-blue-300 hover:border-blue-400' 
+          : 'bg-slate-50 border-slate-200 hover:border-slate-300 hover:bg-slate-100/50'
       }`}
     >
       <input 
@@ -318,17 +325,17 @@ function UploadSection({
       
       {selectedFile ? (
         <div className="flex flex-col items-center justify-center h-full">
-          <CheckCircle className="w-8 h-8 text-emerald-500 mb-2" />
-          <h4 className="text-sm font-bold text-slate-900 line-clamp-1">{selectedFile}</h4>
-          <span className="text-xs font-medium text-blue-600 mt-2 hover:underline">Thay đổi tệp</span>
+          <CheckCircle className="w-10 h-10 text-emerald-500 mb-3" />
+          <h4 className="text-base font-bold text-slate-900 line-clamp-1">{selectedFile}</h4>
+          <span className="text-sm font-bold text-blue-600 mt-2 hover:underline">Thay đổi tệp</span>
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center h-full">
-          <div className="w-12 h-12 bg-white text-slate-500 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-slate-100 group-hover:text-blue-600 group-hover:scale-110 group-hover:shadow-md transition-all">
-            <UploadCloud className="w-6 h-6" />
+          <div className="w-14 h-14 bg-white text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100 group-hover:text-blue-600 group-hover:scale-110 group-hover:shadow-md transition-all">
+            <UploadCloud className="w-7 h-7" />
           </div>
-          <h4 className="text-sm font-bold text-slate-900">{title}</h4>
-          <p className="text-xs text-slate-500 mt-1 leading-relaxed px-2">{desc}</p>
+          <h4 className="text-base font-bold text-slate-900">{title}</h4>
+          <p className="text-sm text-slate-500 mt-1.5 font-medium leading-relaxed px-2">{desc}</p>
         </div>
       )}
     </div>
