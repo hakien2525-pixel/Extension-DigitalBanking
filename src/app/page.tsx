@@ -17,14 +17,32 @@ export default function LoginPage() {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const webcamRef = useRef<Webcam>(null);
 
-  const handleStandardSubmit = (e: React.FormEvent) => {
+  const handleStandardSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (tab === "register") {
-      toast.success("Đăng ký thành công bằng Mật khẩu!");
-    } else {
-      toast.success("Đăng nhập thành công bằng Mật khẩu!");
+    try {
+      const emailInput = (e.target as any)[0].value;
+      const passInput = (e.target as any)[1].value;
+
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: tab,
+          email: emailInput,
+          password: passInput,
+          role: selectedRole
+        })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        toast.success(tab === "register" ? "Đăng ký thành công!" : "Đăng nhập thành công!");
+        navigateToRole();
+      } else {
+        toast.error(data.message || "Có lỗi xảy ra");
+      }
+    } catch (e) {
+      toast.error("Lỗi kết nối máy chủ");
     }
-    navigateToRole();
   };
 
   const navigateToRole = () => {
@@ -39,19 +57,36 @@ export default function LoginPage() {
     setCapturedImage(null);
   };
 
-  const captureFace = useCallback(() => {
+  const captureFace = useCallback(async () => {
     const imageSrc = webcamRef.current?.getScreenshot();
     if (imageSrc) {
       setCapturedImage(imageSrc);
-      if (scanMode === "register") {
-        toast.success("Đã ghi nhận dữ liệu khuôn mặt thành công!");
-      } else {
-        toast.success("Xác thực Face ID thành công!");
-      }
-      setTimeout(() => {
+      
+      try {
+        const res = await fetch('/api/auth', {
+          method: 'POST',
+          body: JSON.stringify({
+            action: scanMode,
+            role: selectedRole,
+            isFaceId: true
+          })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          toast.success(scanMode === "register" ? "Đã ghi nhận dữ liệu khuôn mặt!" : "Xác thực Face ID thành công!");
+          setTimeout(() => {
+            setIsFaceScanning(false);
+            navigateToRole();
+          }, 1500);
+        } else {
+          toast.error(data.message || "Lỗi xác thực Face ID");
+          setIsFaceScanning(false);
+        }
+      } catch (e) {
+        toast.error("Lỗi kết nối máy chủ");
         setIsFaceScanning(false);
-        navigateToRole();
-      }, 1500);
+      }
     }
   }, [webcamRef, scanMode, selectedRole]);
 

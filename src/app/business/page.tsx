@@ -47,12 +47,28 @@ export default function BusinessDashboard() {
       setOcrProgress(prev => {
         if (prev >= 100) {
           clearInterval(interval);
-          setTimeout(() => setScanStep('result'), 1000);
+          finishAndSaveApplication();
           return 100;
         }
         return prev + 10;
       });
     }, 400);
+  };
+
+  const finishAndSaveApplication = async () => {
+    try {
+      await fetch('/api/applications', {
+        method: 'POST',
+        body: JSON.stringify({
+          company: "Công ty TNHH Demo Mới",
+          amount: loanAmount,
+          files: Object.values(files)
+        })
+      });
+      setTimeout(() => setScanStep('result'), 1000);
+    } catch (e) {
+      toast.error("Không thể lưu hồ sơ");
+    }
   };
 
   const handleReupload = () => {
