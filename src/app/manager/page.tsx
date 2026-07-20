@@ -80,7 +80,7 @@ export default function ManagerDashboard() {
       
       {/* Sidebar: Application List */}
       <div className="w-1/3 min-w-[350px] max-w-[400px] bg-white border-r border-slate-200 flex flex-col h-screen z-10 shadow-sm relative">
-        <div className="p-6 border-b border-slate-200 bg-[#0c4a6e] text-white">
+        <div className="p-6 border-b border-slate-200 bg-[#0A192F] text-white">
           <div className="flex items-center gap-4 mb-6">
             <div className="bg-amber-400/20 p-2 rounded-xl">
               <ShieldCheck className="w-8 h-8 text-amber-400" />
@@ -91,13 +91,13 @@ export default function ManagerDashboard() {
             </div>
           </div>
           <div className="relative">
-            <Search className="w-4 h-4 absolute left-3.5 top-3 text-blue-300" />
+            <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
             <input 
               type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Tìm kiếm hồ sơ chờ giải ngân..." 
-              className="w-full bg-[#073654] text-sm text-white placeholder-blue-300/70 rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 border border-[#0c4a6e] transition-all"
+              className="w-full bg-slate-800/50 text-sm text-white placeholder-slate-400 rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-slate-700 transition-all"
             />
           </div>
         </div>
