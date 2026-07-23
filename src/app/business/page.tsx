@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-import { UploadCloud, CheckCircle2, AlertCircle, Loader2, FileText, Building2, CheckCircle, Camera, ScanFace, FileScan, ChevronRight } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { UploadCloud, CheckCircle2, AlertCircle, Loader2, FileText, Building2, CheckCircle, Camera, ScanFace, FileScan, ChevronRight, History, PlusCircle, Clock, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Webcam from "react-webcam";
@@ -10,12 +10,41 @@ type ScanStep = 'idle' | 'face-scan' | 'ocr-scan' | 'result';
 
 export default function BusinessDashboard() {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<'new' | 'history'>('new');
+  
+  // New Application States
   const [loanAmount, setLoanAmount] = useState("");
   const [files, setFiles] = useState<Record<string, string>>({});
-  
   const [scanStep, setScanStep] = useState<ScanStep>('idle');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [ocrProgress, setOcrProgress] = useState(0);
   const webcamRef = useRef<Webcam>(null);
+
+  // History States
+  const [historyApps, setHistoryApps] = useState<any[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'history') {
+      fetchHistory();
+    }
+  }, [activeTab]);
+
+  const fetchHistory = async () => {
+    setIsLoadingHistory(true);
+    try {
+      const res = await fetch('/api/applications');
+      const data = await res.json();
+      if(data.success) {
+        // Lọc các hồ sơ giả định của chính công ty này
+        setHistoryApps(data.data.filter((a: any) => a.company === "Công ty TNHH Demo Mới"));
+      }
+    } catch(e) {
+      toast.error("Lỗi tải lịch sử");
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
 
   const handleStartAnalysis = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,15 +60,12 @@ export default function BusinessDashboard() {
     if (imageSrc) {
       setCapturedImage(imageSrc);
       toast.success("Chụp ảnh khuôn mặt thành công!");
-      // Chuyển sang bước quét OCR
       setTimeout(() => {
         setScanStep('ocr-scan');
         simulateOcrScan();
       }, 1500);
     }
   }, [webcamRef]);
-
-  const [ocrProgress, setOcrProgress] = useState(0);
 
   const simulateOcrScan = () => {
     setOcrProgress(0);
@@ -77,11 +103,22 @@ export default function BusinessDashboard() {
     setOcrProgress(0);
     setFiles({});
     setLoanAmount("");
+    setActiveTab('history');
   };
 
   const handleLogout = () => {
     toast.success("Đăng xuất thành công");
     router.push('/');
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'approved': return <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-bold"><CheckCircle className="w-4 h-4"/> Đã giải ngân</span>;
+      case 'rejected': return <span className="flex items-center gap-1.5 px-3 py-1 bg-rose-100 text-rose-700 rounded-lg text-sm font-bold"><XCircle className="w-4 h-4"/> Bị từ chối</span>;
+      case 'pending': return <span className="flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-700 rounded-lg text-sm font-bold"><Clock className="w-4 h-4"/> Chờ thẩm định sơ bộ</span>;
+      case 'pending_final': return <span className="flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-sm font-bold"><Clock className="w-4 h-4"/> Chờ duyệt giải ngân</span>;
+      default: return null;
+    }
   };
 
   return (
@@ -99,7 +136,7 @@ export default function BusinessDashboard() {
             <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-bold shadow-inner">
               C
             </div>
-            <span className="font-bold hidden sm:inline tracking-wide">Công ty CP ABC</span>
+            <span className="font-bold hidden sm:inline tracking-wide">Công ty TNHH Demo Mới</span>
           </div>
           <button onClick={handleLogout} className="text-slate-300 hover:text-white transition-colors bg-white/10 hover:bg-rose-500/80 px-5 py-2.5 rounded-xl font-bold">
             Đăng xuất
@@ -108,9 +145,64 @@ export default function BusinessDashboard() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+      <main className="max-w-5xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
         
+        {/* Navigation Tabs */}
         {scanStep === 'idle' && (
+          <div className="flex bg-slate-200/50 p-1.5 rounded-2xl mb-10 shadow-inner w-fit mx-auto sm:mx-0">
+            <button 
+              onClick={() => setActiveTab('new')}
+              className={`flex items-center gap-2 px-6 py-3 text-sm font-bold rounded-xl transition-all ${activeTab === 'new' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              <PlusCircle className="w-5 h-5" /> Nộp Hồ sơ Vay mới
+            </button>
+            <button 
+              onClick={() => setActiveTab('history')}
+              className={`flex items-center gap-2 px-6 py-3 text-sm font-bold rounded-xl transition-all ${activeTab === 'history' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              <History className="w-5 h-5" /> Lịch sử Hồ sơ
+            </button>
+          </div>
+        )}
+
+        {/* Tab: History */}
+        {activeTab === 'history' && scanStep === 'idle' && (
+          <div className="animate-in fade-in duration-500">
+            <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-8">Hồ sơ đã nộp</h2>
+            
+            {isLoadingHistory ? (
+              <div className="flex justify-center p-20"><Loader2 className="w-10 h-10 animate-spin text-blue-500" /></div>
+            ) : historyApps.length === 0 ? (
+              <div className="bg-white rounded-3xl p-16 text-center border border-slate-200 shadow-sm">
+                <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-slate-800 mb-2">Chưa có hồ sơ nào</h3>
+                <p className="text-slate-500 mb-6">Bạn chưa nộp bất kỳ hồ sơ vay vốn nào.</p>
+                <button onClick={() => setActiveTab('new')} className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700">Tạo hồ sơ đầu tiên</button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {historyApps.map(app => (
+                  <div key={app.id} className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex justify-between items-start mb-4">
+                      <span className="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-lg">Mã: {app.id}</span>
+                      <span className="text-sm font-semibold text-slate-500">{app.date}</span>
+                    </div>
+                    <div className="mb-6">
+                      <p className="text-sm text-slate-500 font-bold uppercase tracking-wider mb-1">Số tiền đề nghị vay</p>
+                      <p className="text-2xl font-black text-slate-900">{app.amount}</p>
+                    </div>
+                    <div className="flex justify-between items-center border-t border-slate-100 pt-4">
+                      {getStatusBadge(app.status)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab: New Application */}
+        {activeTab === 'new' && scanStep === 'idle' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="mb-10 flex justify-between items-end">
               <div>
@@ -174,6 +266,7 @@ export default function BusinessDashboard() {
         {/* Step 2: Face Scan Modal */}
         {scanStep === 'face-scan' && (
           <div className="bg-slate-900 rounded-3xl shadow-2xl overflow-hidden relative border border-slate-800 text-white animate-in zoom-in-95 duration-300">
+            {/* Same as before... */}
             <div className="p-10 text-center border-b border-slate-800 bg-slate-800/50">
               <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-500/30">
                 <ScanFace className="w-8 h-8 text-blue-400" />
@@ -219,6 +312,7 @@ export default function BusinessDashboard() {
         {/* Step 3: OCR Scanning Animation */}
         {scanStep === 'ocr-scan' && (
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in duration-500">
+            {/* Same as before... */}
             <div className="p-20 text-center space-y-10">
               <div className="relative w-40 h-48 mx-auto bg-blue-50 rounded-2xl border-4 border-blue-100 overflow-hidden shadow-inner">
                 <FileScan className="w-16 h-16 text-blue-300 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
@@ -227,24 +321,12 @@ export default function BusinessDashboard() {
                   style={{ top: `${ocrProgress}%` }}
                 ></div>
               </div>
-              
               <div>
                 <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight">AI đang quét và bóc tách dữ liệu (OCR)</h3>
-                <p className="text-slate-500 mt-2 text-base font-medium">Trích xuất thông tin từ Giấy phép ĐKKD, Báo cáo tài chính và CCCD.</p>
+                <p className="text-slate-500 mt-2 text-base font-medium">Trích xuất thông định từ Giấy phép ĐKKD, Báo cáo tài chính và CCCD.</p>
               </div>
-
               <div className="w-full max-w-lg mx-auto bg-slate-100 rounded-full h-3 mb-6 overflow-hidden">
                 <div className="bg-blue-600 h-full rounded-full transition-all duration-300" style={{ width: `${ocrProgress}%` }}></div>
-              </div>
-              
-              <div className="max-w-lg mx-auto space-y-4 text-base text-slate-700 text-left bg-slate-50 p-8 rounded-2xl border border-slate-100 shadow-sm font-medium">
-                <div className="flex items-center gap-4"><CheckCircle2 className="w-6 h-6 text-emerald-500" /> <span>Đang đọc Giấy phép kinh doanh... <span className="font-bold text-emerald-600">Hoàn tất</span></span></div>
-                {ocrProgress > 50 && (
-                  <div className="flex items-center gap-4"><CheckCircle2 className="w-6 h-6 text-emerald-500" /> <span>Đang trích xuất Báo cáo tài chính... <span className="font-bold text-emerald-600">Hoàn tất</span></span></div>
-                )}
-                {ocrProgress > 80 && (
-                  <div className="flex items-center gap-4"><CheckCircle2 className="w-6 h-6 text-emerald-500" /> <span>Đối chiếu khuôn mặt với CCCD... <span className="font-bold text-emerald-600">Hoàn tất</span></span></div>
-                )}
               </div>
             </div>
           </div>
@@ -253,6 +335,7 @@ export default function BusinessDashboard() {
         {/* Step 4: Final Results */}
         {scanStep === 'result' && (
           <div className="bg-white rounded-3xl shadow-2xl border border-emerald-200 overflow-hidden animate-in zoom-in duration-500">
+            {/* Same as before... */}
             <div className="bg-emerald-50 border-b border-emerald-100 p-12 text-center">
               <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white shadow-md">
                 <CheckCircle className="w-12 h-12 text-emerald-600" />
@@ -269,34 +352,16 @@ export default function BusinessDashboard() {
                     <ScanFace className="w-6 h-6" />
                     Xác thực khuôn mặt
                   </div>
-                  <p className="text-base text-slate-600 font-medium leading-relaxed">Khuôn mặt chụp thực tế khớp <strong className="text-emerald-600 text-xl">98.5%</strong> với ảnh trên Căn cước công dân của Người đại diện pháp luật.</p>
-                </div>
-                
-                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                  <div className="flex items-center gap-3 text-blue-600 font-extrabold mb-4 text-lg">
-                    <FileScan className="w-6 h-6" />
-                    Trích xuất hồ sơ (OCR)
-                  </div>
-                  <ul className="text-base text-slate-600 space-y-3 font-medium">
-                    <li className="flex justify-between border-b border-slate-100 pb-2"><span>Mã số thuế:</span> <strong className="text-slate-900">0102030405</strong></li>
-                    <li className="flex justify-between border-b border-slate-100 pb-2"><span>Loại hình:</span> <strong className="text-slate-900">Công ty Cổ phần</strong></li>
-                    <li className="flex justify-between pb-2"><span>Năng lực trả nợ:</span> <strong className="text-emerald-600">Khả thi</strong></li>
-                  </ul>
+                  <p className="text-base text-slate-600 font-medium leading-relaxed">Khuôn mặt chụp thực tế khớp <strong className="text-emerald-600 text-xl">98.5%</strong> với ảnh trên CCCD.</p>
                 </div>
               </div>
 
               <div className="mt-10 pt-8 border-t border-slate-100 flex justify-end gap-4">
                 <button 
                   onClick={handleReupload}
-                  className="bg-white border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 py-3.5 px-8 rounded-xl font-bold transition-all text-lg"
-                >
-                  Nộp hồ sơ mới
-                </button>
-                <button 
-                  onClick={() => router.push('/')}
                   className="bg-[#0A192F] text-white hover:bg-blue-900 py-3.5 px-10 rounded-xl font-bold transition-all shadow-lg shadow-[#0A192F]/20 text-lg hover:-translate-y-0.5"
                 >
-                  Về Trang chủ
+                  Về Lịch sử Hồ sơ
                 </button>
               </div>
             </div>
